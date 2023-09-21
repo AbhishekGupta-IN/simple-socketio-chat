@@ -1,31 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Socket.io Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>WhatsApp Chat</title>
 </head>
 <body>
-  <ul id="messages"></ul>
-  <form id="form" action="">
-    <input id="input" autocomplete="off" /><button>Send</button>
-  </form>
-  
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script>
-    $(function () {
-      var socket = io();
-
-      $('form').submit(function(){
-        socket.emit('chat message', $('#input').val());
-        $('#input').val('');
-        return false;
-      });
-
-      socket.on('chat message', function(msg){
-        $('#messages').append($('<li>').text(msg));
-      });
-    });
-  </script>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>WhatsApp Chat</h1>
+        </div>
+        <div class="chat-messages">
+            <div class="message received">
+                <p>Hello, how are you?</p>
+            </div>
+            <div class="message sent">
+                <p>I'm good, thanks!</p>
+            </div>
+            <!-- Add more messages here -->
+        </div>
+        <div class="chat-input">
+            <textarea placeholder="Type your message" id="message"></textarea>
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
 </body>
 </html>
+
+<!-- Add this script tag to your HTML -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    // Send a message
+    function sendMessage() {
+        const message = document.querySelector('#message').value;
+        socket.emit('chat message', message);
+        document.querySelector('#message').value = '';
+    }
+
+    // Receive a message
+    socket.on('chat message', (msg) => {
+        const messageContainer = document.querySelector('.chat-messages');
+        const messageElement = document.createElement('div');
+
+        messageElement.classList.add('message', 'sent ');
+
+        messageElement.textContent = msg;
+        messageContainer.appendChild(messageElement);
+    });
+
+    const sendButton = document.getElementById('sendButton');
+    sendButton.addEventListener('click', sendMessage);
+</script>
+
