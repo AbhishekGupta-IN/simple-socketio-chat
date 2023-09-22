@@ -20,12 +20,23 @@ io.on('connection', (socket) => {
 
   // Handle chat messages
   socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+    // Broadcast the message to all connected clients
+    io.emit('chat message', { username: socket.username, message: msg });
   });
 
   // Handle disconnect
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    if (socket.username) {
+        // Broadcast to all connected clients that a user has left
+        io.emit('user left', socket.username);
+    }
+  });
+  
+  // Handle join
+  socket.on('join', (username) => {
+    socket.username = username;
+    // Broadcast to all connected clients that a new user has joined
+    io.emit('user joined', username);
   });
 });
 

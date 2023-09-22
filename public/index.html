@@ -3,26 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style.css">
-    <title>WhatsApp Chat</title>
+    <title>chatGPT Chat</title>
 </head>
 <body>
+    <div class="sidebar">
+        <input type="text" id="username" placeholder="Enter your username">
+        <h2>Online Users</h2>
+        <ul id="user-list">
+            <!-- User list will be populated here -->
+        </ul>
+    </div>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>WhatsApp Chat</h1>
+            <h1>Quick Chat</h1>
         </div>
         <div class="chat-messages">
             <div class="message received">
-                <p>Hello, how are you?</p>
+                <div class="message-item user-name">User 1</div>
+                <div class="message-item message-body">Hello, how are you?</div>
             </div>
             <div class="message sent">
-                <p>I'm good, thanks!</p>
+                <div class="message-item user-name">User 2</div>
+                <div class="message-item message-body">I'm good, thanks!</div>
             </div>
             <!-- Add more messages here -->
         </div>
         <div class="chat-input">
             <textarea placeholder="Type your message" id="message"></textarea>
-            <button id="sendButton">Send</button>
+            <button id="sendButton">
+                <i class="fa fa-paper-plane"></i> <!-- FontAwesome send icon -->
+            </button>
         </div>
     </div>
 </body>
@@ -33,6 +45,12 @@
 <script>
     const socket = io();
 
+    // When the user submits the username
+    document.getElementById('username').addEventListener('change', (event) => {
+        const username = event.target.value;
+        socket.emit('join', username);
+    });
+
     // Send a message
     function sendMessage() {
         const message = document.querySelector('#message').value;
@@ -41,14 +59,46 @@
     }
 
     // Receive a message
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', (data) => {
         const messageContainer = document.querySelector('.chat-messages');
         const messageElement = document.createElement('div');
 
-        messageElement.classList.add('message', 'sent');
+        currentUsername = document.getElementById('username').value;
 
-        messageElement.textContent = msg;
+        messageElement.classList.add('message', currentUsername === data.username ? 'sent' : 'received');
+
+        const usernameElement = document.createElement('div');
+        usernameElement.classList.add('message-item', 'user-name');
+        usernameElement.textContent = currentUsername === data.username ? 'You' : data.username;
+
+        const messageBodyElement = document.createElement('div');
+        messageBodyElement.classList.add('message-item', 'message-body');
+        messageBodyElement.textContent = data.message;
+
+
+        messageElement.appendChild(usernameElement);
+        messageElement.appendChild(messageBodyElement);
         messageContainer.appendChild(messageElement);
+    });
+
+    // When a new user joins, update the user list
+    socket.on('user joined', (username) => {
+        const userList = document.getElementById('user-list');
+        const listItem = document.createElement('li');
+        listItem.textContent = username;
+        userList.appendChild(listItem);
+    });
+
+    // When a user leaves, remove them from the user list
+    socket.on('user left', (username) => {
+        const userList = document.getElementById('user-list');
+        const items = userList.getElementsByTagName('li');
+        for (const item of items) {
+            if (item.textContent === username) {
+                userList.removeChild(item);
+                break;
+            }
+        }
     });
 
     const sendButton = document.getElementById('sendButton');
